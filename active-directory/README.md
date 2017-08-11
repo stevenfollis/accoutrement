@@ -132,3 +132,5 @@ Once the groups are established and syncing, permissions can be assigned to them
 
 ## Remote Desktop
 To remote desktop into the Domain Controller, use username `docker` and password `Docker123456!`. To download a pre-configured .rdp file, click the **Connect** button on the Overview Blade for the DC VM within the Azure Portal.
+
+![image](./media/screen11.png)
