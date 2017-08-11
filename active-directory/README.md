@@ -33,6 +33,31 @@ Click the following button to begin the provisioning process via the Azure Porta
 
 This file is also deployable via the [Azure CLI](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-template-deploy-cli) or [PowerShell](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-template-deploy).
 
+## Parameters
+Before deployment you will need to provide parameters:
+
+* **Ddc License Key** - the entire JSON file from `docker_subscription.lic` downloaded from Docker Store -> My Content -> Your Subscription. Simply copy + paste, doesn't need any encoding love.
+
+* **Ad Service Principal App ID** - GUID representing the ID you generated for the SP
+
+* **Ad Service Principal App ID** - GUID repesenting the password generated for the SP
+
+* **Ssh Public Key** - `.pub` part of the public/private key pair. Paste right on into the box
+
+* **Manager Count** - Odd number to ensure quorum can be maintained for the cluster
+
+* **Manager VM Size** - Defaults to `Standard_D2_v2`
+
+* **Worker Count** - Number of VMs for the worker nodes. Recommended to have 3+ to show workloads moving across workers
+
+* **Worker VM Size** - Default to `Standard_D2_v2`
+
+* **Domain Name** - Name used by AD. Defaults to `contoso.local` to match most AD starter guides. Feel free to adjust to another name
+
+* **Number Users** - Max number of sample users to be generated. Will likely be slightly lower than this number, as duplicates will be dropped
+
+![image](./media/portal.png)
+
 ## Architecture
 
 Docker EE for Azure is the stock template that you'd be using if you provisioned via the Azure Marketplace. It deploys first.
@@ -47,6 +72,7 @@ A Public IP resource is added for remoting into the machine via RDP.
 The template provisions all necessary infrastructure, however a bit of configuration will be necessary to plumb the components together.
 
 ### Configure LDAP
-1. Open UCP in a browser
+TODO
 
 ### Configure Groups
+TODO
