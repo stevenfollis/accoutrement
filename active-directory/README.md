@@ -25,6 +25,20 @@ The following are needed prior to running the template:
 
 ## Deploy the ARM Template
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-quickstart-templates%2Fmaster%2Fphabricator-on-ubuntu%2Fazuredeploy.json" target="_blank">
+Click the following button to begin the provisioning process via the Azure Portal:
+
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fgithub.com%2Fstevenfollis%2Fshipyard%2Fblob%2Fmaster%2Factive-directory%2Fazuredeploy.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>Ï
+
+This file is also deployable via the Azure CLI or PowerShell.
+
+## Architecture
+
+Docker EE for Azure is the stock template that you'd be using if you provisioned via the Azure Marketplace. It deploys first.
+
+After Docker EE finishes deploying its virtual network,  a Windows Server 2016 VM + NIC are provisioned inside of the existing VNet and Subnet. 
+
+A Public IP resource is added for remoting into the machine via RDP. 
+
+![image](./media/architecture.png) 
