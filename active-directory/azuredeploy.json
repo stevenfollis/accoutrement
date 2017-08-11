@@ -177,6 +177,13 @@
             "metadata": {
                 "description": "Name of the domain used by Active Directory"
             }
+        },
+        "numberUsers": {
+            "type": "int",
+            "defaultValue": 5000,
+            "metadata": {
+                "description": "Number of test users to be added to the Active Directory"
+            }
         }
     },
     "variables": {
@@ -231,9 +238,9 @@
             "domainName": "[parameters('domainName')]"
         },
         "scripts": {
-            "installDocker": "https://gist.githubusercontent.com/stevenfollis/91d2b64b07a3c2110f879727761fbf1f/raw/421f402acd2f64266930beb6f67d514d58ab170b/install-dockeree.sh",
-            "configureAD": "https://github.com/Azure/azure-quickstart-templates/raw/master/active-directory-new-domain/DSC/CreateADPDC.zip",
-            "createTestUsers": "https://gist.githubusercontent.com/stevenfollis/f86f6e7855e79e8047584fe021bde1fc/raw/9dbb81096295a22fbc6af45aba360279495372be/CreateTestUsers.ps1"
+            "base": "https://raw.githubusercontent.com/stevenfollis/shipyard/master/active-directory/scripts/",
+            "configureAD": "[concat(variables('scripts').base, 'CreateADPDC.zip')]",
+            "createTestUsers": "[concat(variables('scripts').base, 'CreateTestUsers.ps1')]"
         }
     },
     "resources": [
@@ -389,7 +396,7 @@
                             "fileUris": [
                                 "[variables('scripts').createTestUsers]"
                             ],
-                            "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File CreateTestUsers.ps1 -numberUsers 50 -targetOU \"CN=Users,DC=contoso,DC=local\"')]"
+                            "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File CreateTestUsers.ps1 -numberUsers ', parameters('numberUsers'), ' -targetOU \"CN=Users,DC=', split(parameters('domainName'), '.')[0],'DC=',split(parameters('domainName'), '.')[1], '\"')]"
                         }
                     }
                 }
