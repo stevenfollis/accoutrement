@@ -1,0 +1,400 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "ddcLicenseKey": {
+            "type": "String",
+            "metadata": {
+                "description": "Upload your Docker Datacenter License Key"
+            }
+        },
+        "adServicePrincipalAppID": {
+            "type": "String",
+            "metadata": {
+                "description": "AD ServicePrincipal App ID"
+            }
+        },
+        "adServicePrincipalAppSecret": {
+            "type": "SecureString",
+            "metadata": {
+                "description": "AD ServicePrincipal App Secret"
+            }
+        },
+        "sshPublicKey": {
+            "type": "String",
+            "metadata": {
+                "description": "The SSH public key used to authenticate with the created swarm. Usually available in $HOME/.ssh/id_rsa.pub file"
+            }
+        },
+        "managerCount": {
+            "defaultValue": 1,
+            "allowedValues": [
+                1,
+                3,
+                5
+            ],
+            "type": "Int"
+        },
+        "managerVMSize": {
+            "defaultValue": "Standard_D2_v2",
+            "allowedValues": [
+                "Standard_A0",
+                "Standard_A1",
+                "Standard_A2",
+                "Standard_A3",
+                "Standard_A4",
+                "Standard_A5",
+                "Standard_A6",
+                "Standard_A7",
+                "Standard_A8",
+                "Standard_A9",
+                "Standard_A10",
+                "Standard_A11",
+                "Standard_D1",
+                "Standard_D2",
+                "Standard_D3",
+                "Standard_D4",
+                "Standard_D11",
+                "Standard_D12",
+                "Standard_D13",
+                "Standard_D14",
+                "Standard_D1_v2",
+                "Standard_D2_v2",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
+                "Standard_D5_v2",
+                "Standard_D11_v2",
+                "Standard_D12_v2",
+                "Standard_D13_v2",
+                "Standard_D14_v2",
+                "Standard_G1",
+                "Standard_G2",
+                "Standard_G3",
+                "Standard_G4",
+                "Standard_G5",
+                "Standard_DS1",
+                "Standard_DS2",
+                "Standard_DS3",
+                "Standard_DS4",
+                "Standard_DS11",
+                "Standard_DS12",
+                "Standard_DS13",
+                "Standard_DS14",
+                "Standard_GS1",
+                "Standard_GS2",
+                "Standard_GS3",
+                "Standard_GS4",
+                "Standard_GS5"
+            ],
+            "type": "String",
+            "metadata": {
+                "description": "The size of the created Manager machines"
+            }
+        },
+        "workerCount": {
+            "defaultValue": 1,
+            "allowedValues": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15
+            ],
+            "type": "Int",
+            "metadata": {
+                "description": "Number of Worker nodes"
+            }
+        },
+        "workerVMSize": {
+            "defaultValue": "Standard_D2_v2",
+            "allowedValues": [
+                "Standard_A0",
+                "Standard_A1",
+                "Standard_A2",
+                "Standard_A3",
+                "Standard_A4",
+                "Standard_A5",
+                "Standard_A6",
+                "Standard_A7",
+                "Standard_A8",
+                "Standard_A9",
+                "Standard_A10",
+                "Standard_A11",
+                "Standard_D1",
+                "Standard_D2",
+                "Standard_D3",
+                "Standard_D4",
+                "Standard_D11",
+                "Standard_D12",
+                "Standard_D13",
+                "Standard_D14",
+                "Standard_D1_v2",
+                "Standard_D2_v2",
+                "Standard_D3_v2",
+                "Standard_D4_v2",
+                "Standard_D5_v2",
+                "Standard_D11_v2",
+                "Standard_D12_v2",
+                "Standard_D13_v2",
+                "Standard_D14_v2",
+                "Standard_G1",
+                "Standard_G2",
+                "Standard_G3",
+                "Standard_G4",
+                "Standard_G5",
+                "Standard_DS1",
+                "Standard_DS2",
+                "Standard_DS3",
+                "Standard_DS4",
+                "Standard_DS11",
+                "Standard_DS12",
+                "Standard_DS13",
+                "Standard_DS14",
+                "Standard_GS1",
+                "Standard_GS2",
+                "Standard_GS3",
+                "Standard_GS4",
+                "Standard_GS5"
+            ],
+            "type": "String",
+            "metadata": {
+                "description": "The size of the created machines"
+            }
+        },
+        "domainName": {
+            "type": "string",
+            "defaultValue": "contoso.local",
+            "metadata": {
+                "description": "Name of the domain used by Active Directory"
+            }
+        }
+    },
+    "variables": {
+        "d4a": {
+            "templateUrl": "https://gallery.azure.com/artifact/20161101/docker.dockerdatacenterdocker-datacenter.1.0.17/Artifacts/mainTemplate.json",
+            "parameters": {
+                "ddcLicenseKey": {
+                    "value": "[parameters('ddcLicenseKey')]"
+                },
+                "ddcUsername": {
+                    "value": "admin"
+                },
+                "ddcPassword": {
+                    "value": "Docker123!"
+                },
+                "adServicePrincipalAppID": {
+                    "value": "[parameters('adServicePrincipalAppID')]"
+                },
+                "adServicePrincipalAppSecret": {
+                    "value": "[parameters('adServicePrincipalAppSecret')]"
+                },
+                "enableSystemPrune": {
+                    "value": "yes"
+                },
+                "managerCount": {
+                    "value": "[parameters('managerCount')]"
+                },
+                "managerVMSize": {
+                    "value": "[parameters('managerVMSize')]"
+                },
+                "sshPublicKey": {
+                    "value": "[parameters('sshPublicKey')]"
+                },
+                "swarmName": {
+                    "value": "swarm"
+                },
+                "workerCount": {
+                    "value": "[parameters('workerCount')]"
+                },
+                "workerVMSize": {
+                    "value": "[parameters('workerVMSize')]"
+                }
+            }
+        },
+        "dc": {
+            "vnet": "[resourceId('Microsoft.Network/virtualNetworks', 'swarm-vnet')]",
+            "subnet": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'swarm-vnet', 'swarm-subnet')]",
+            "vmSize": "Standard_DS2_v2",
+            "imagePublisher": "MicrosoftWindowsServer",
+            "imageOffer": "WindowsServer",
+            "imageSku": "2016-Datacenter",
+            "domainName": "[parameters('domainName')]"
+        },
+        "scripts": {
+            "installDocker": "https://gist.githubusercontent.com/stevenfollis/91d2b64b07a3c2110f879727761fbf1f/raw/421f402acd2f64266930beb6f67d514d58ab170b/install-dockeree.sh",
+            "configureAD": "https://github.com/Azure/azure-quickstart-templates/raw/master/active-directory-new-domain/DSC/CreateADPDC.zip",
+            "createTestUsers": "https://gist.githubusercontent.com/stevenfollis/f86f6e7855e79e8047584fe021bde1fc/raw/9dbb81096295a22fbc6af45aba360279495372be/CreateTestUsers.ps1"
+        }
+    },
+    "resources": [
+        {
+            "name": "d4a",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2017-05-10",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('d4a').templateUrl]"
+                },
+                "parameters": "[variables('d4a').parameters]"
+            }
+        },
+        {
+            "apiVersion": "2016-03-30",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "dc-public-ip",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[concat('dc-', resourceGroup().name)]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "dc",
+            "apiVersion": "2017-06-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[variables('dc').subnet]"
+                            },
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'dc-public-ip')]"
+                            }
+                        }
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'd4a')]"
+            ]
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "dc",
+            "apiVersion": "2016-04-30-preview",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[variables('dc').vmSize]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[variables('dc').imagePublisher]",
+                        "offer": "[variables('dc').imageOffer]",
+                        "sku": "[variables('dc').imageSku]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "dc",
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "Premium_LRS"
+                        },
+                        "caching": "ReadWrite"
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "dc-data-disk",
+                            "diskSizeGB": 32,
+                            "lun": 0,
+                            "managedDisk": {
+                                "storageAccountType": "Premium_LRS"
+                            },
+                            "createOption": "Empty",
+                            "caching": "None"
+                        }
+                    ]
+                },
+                "osProfile": {
+                    "computerName": "dc",
+                    "adminUsername": "docker",
+                    "adminPassword": "Docker123456!"
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', 'dc')]"
+                        }
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', 'dc')]"
+            ],
+            "resources": [
+                {
+                    "type": "extensions",
+                    "name": "CreateADForest",
+                    "apiVersion": "2017-03-30",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines', 'dc')]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Powershell",
+                        "type": "DSC",
+                        "typeHandlerVersion": "2.19",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "ModulesUrl": "[variables('scripts').configureAD]",
+                            "ConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
+                            "Properties": {
+                                "DomainName": "[variables('dc').domainName]",
+                                "AdminCreds": {
+                                    "UserName": "eeadmin",
+                                    "Password": "PrivateSettingsRef:AdminPassword"
+                                }
+                            }
+                        },
+                        "protectedSettings": {
+                            "Items": {
+                                "AdminPassword": "Docker123!Docker123!"
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "extensions",
+                    "name": "CreateTestUsers",
+                    "apiVersion": "2017-03-30",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines', 'dc')]",
+                        "[resourceId('Microsoft.Compute/virtualMachines/extensions', 'dc', 'CreateADForest')]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Compute",
+                        "type": "CustomScriptExtension",
+                        "typeHandlerVersion": "1.9",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "fileUris": [
+                                "[variables('scripts').createTestUsers]"
+                            ],
+                            "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File CreateTestUsers.ps1 -numberUsers 50 -targetOU \"CN=Users,DC=contoso,DC=local\"')]"
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "outputs": {}
+}
