@@ -1,0 +1,22 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "numberUsers": {
+            "type": "int",
+            "defaultValue": 5000
+        },
+        "domainName": {
+            "type": "string",
+            "defaultValue": "contoso.local"
+        }
+    },
+    "variables": {},
+    "resources": [],
+    "outputs": {
+        "test": {
+            "type": "string",
+            "value": "[concat('powershell -ExecutionPolicy Unrestricted -File CreateTestUsers.ps1 -numberUsers ', parameters('numberUsers'), ' -targetOU \"CN=Users,DC=', split(parameters('domainName'), '.')[0],'DC=',split(parameters('domainName'), '.')[1], '\"')]"
+        }
+    }
+}
