@@ -31,7 +31,7 @@ Click the following button to begin the provisioning process via the Azure Porta
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>Ï
 
-This file is also deployable via the Azure CLI or PowerShell.
+This file is also deployable via the [Azure CLI](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-template-deploy-cli) or [PowerShell](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-template-deploy).
 
 ## Architecture
 
