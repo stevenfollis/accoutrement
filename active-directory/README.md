@@ -27,7 +27,7 @@ The following are needed prior to running the template:
 
 Click the following button to begin the provisioning process via the Azure Portal:
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fgithub.com%2Fstevenfollis%2Fshipyard%2Fblob%2Fmaster%2Factive-directory%2Fazuredeploy.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fstevenfollis%2Fshipyard%2Fmaster%2Factive-directory%2Fazuredeploy.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>Ï
 
@@ -42,3 +42,11 @@ After Docker EE finishes deploying its virtual network,  a Windows Server 2016 V
 A Public IP resource is added for remoting into the machine via RDP. 
 
 ![image](./media/architecture.png) 
+
+## Configuration
+The template provisions all necessary infrastructure, however a bit of configuration will be necessary to plumb the components together.
+
+### Configure LDAP
+1. Open UCP in a browser
+
+### Configure Groups
