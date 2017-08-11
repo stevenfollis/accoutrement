@@ -56,6 +56,8 @@ Before deployment you will need to provide parameters:
 
 * **Number Users** - Max number of sample users to be generated. Will likely be slightly lower than this number, as duplicates will be dropped
 
+> Be sure to scroll down and click the checkbox for `I agree to the terms and conditions stated above`. It's easy to miss
+
 ![image](./media/portal.png)
 
 ## Architecture
