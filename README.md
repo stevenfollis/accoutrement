@@ -1,4 +1,4 @@
-# Shipyard
+# Chantier
 
 A collection of Azure ARM Templates for quickly provisioning infrastructure for Docker EE scenarios.
 
