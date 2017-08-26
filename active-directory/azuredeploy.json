@@ -3,25 +3,25 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "ddcLicenseKey": {
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "Upload your Docker Datacenter License Key"
             }
         },
         "adServicePrincipalAppID": {
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "AD ServicePrincipal App ID"
             }
         },
         "adServicePrincipalAppSecret": {
-            "type": "SecureString",
+            "type": "securestring",
             "metadata": {
                 "description": "AD ServicePrincipal App Secret"
             }
         },
         "sshPublicKey": {
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "The SSH public key used to authenticate with the created swarm. Usually available in $HOME/.ssh/id_rsa.pub file"
             }
@@ -33,7 +33,7 @@
                 3,
                 5
             ],
-            "type": "Int"
+            "type": "int"
         },
         "managerVMSize": {
             "defaultValue": "Standard_D2_v2",
@@ -86,7 +86,7 @@
                 "Standard_GS4",
                 "Standard_GS5"
             ],
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "The size of the created Manager machines"
             }
@@ -110,7 +110,7 @@
                 14,
                 15
             ],
-            "type": "Int",
+            "type": "int",
             "metadata": {
                 "description": "Number of Worker nodes"
             }
@@ -166,7 +166,7 @@
                 "Standard_GS4",
                 "Standard_GS5"
             ],
-            "type": "String",
+            "type": "string",
             "metadata": {
                 "description": "The size of the created machines"
             }
@@ -188,7 +188,7 @@
     },
     "variables": {
         "d4a": {
-            "templateUrl": "https://gallery.azure.com/artifact/20161101/docker.dockerdatacenterdocker-datacenter.1.0.17/Artifacts/mainTemplate.json",
+            "templateUrl": "https://gallery.azure.com/artifact/20161101/docker.dockerdatacenterdocker-standard.1.0.1/Artifacts/mainTemplate.json",
             "parameters": {
                 "ddcLicenseKey": {
                     "value": "[parameters('ddcLicenseKey')]"
