@@ -20,32 +20,6 @@
             },
             "type": "securestring"
         },
-        "ddcPassword": {
-            "maxLength": 40,
-            "metadata": {
-                "description": "Please enter the password you want to use for Docker Enterprise Edition."
-            },
-            "minLength": 8,
-            "type": "securestring"
-        },
-        "ddcUsername": {
-            "defaultValue": "admin",
-            "metadata": {
-                "description": "Please enter the username you want to use for Docker Enterprise Edition."
-            },
-            "type": "string"
-        },
-        "enableSystemPrune": {
-            "allowedValues": [
-                "yes",
-                "no"
-            ],
-            "defaultValue": "no",
-            "metadata": {
-                "description": "Cleans up unused images, containers, networks and volumes"
-            },
-            "type": "string"
-        },
         "managerCount": {
             "allowedValues": [
                 1,
@@ -114,13 +88,6 @@
         "sshPublicKey": {
             "metadata": {
                 "description": "The SSH public key used to authenticate with the created swarm. Usually available in $HOME/.ssh/id_rsa.pub file"
-            },
-            "type": "string"
-        },
-        "swarmName": {
-            "defaultValue": "dockerswarm",
-            "metadata": {
-                "description": "Define how the swarm resources should be named."
             },
             "type": "string"
         },
@@ -210,7 +177,7 @@
             "templateUrl": "https://gallery.azure.com/artifact/20161101/docker.dockerdatacenterdocker-standard.1.0.1/Artifacts/mainTemplate.json",
             "parameters": {
                 "ddcLicense": {
-                    "value": "[parameters('ddcLicenseKey')]"
+                    "value": "[parameters('ddcLicense')]"
                 },
                 "ddcUsername": {
                     "value": "admin"
@@ -324,6 +291,28 @@
             "dependsOn": [
                 "Microsoft.Resources/deployments/oms"
             ]
+        }, 
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "swarm-manager-vmss/OMSExtension",
+            "apiVersion": "2016-03-30",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/d4a",
+                "Microsoft.Resources/deployments/oms"
+            ],
+            "properties": {
+                "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+                "type": "MicrosoftMonitoringAgent",
+                "typeHandlerVersion": "1.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName'))).customerId]"
+                },
+                "protectedSettings": {
+                    "workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName'))).primarySharedKey]"
+                }
+            }
         }
     ],
     "outputs": {}
