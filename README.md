@@ -9,5 +9,5 @@ A collection of Azure ARM Templates for quickly provisioning infrastructure for 
 |------------------|----------------------------------------------------------------------------------------------|
 | [Active Directory](./active-directory) | Provisions Docker EE for Azure with an AD Domain Controller pre-loaded with users and groups |
 | Operations Management Suite | Coming Soon | 
-| [Docker for Ubuntu](./ubuntu) | Provision a Docker EE cluster on regular IaaS VMs |
+| [Ubuntu](./ubuntu) | Provisions a Docker EE for Ubuntu cluster on Azure IaaS VMs |
 

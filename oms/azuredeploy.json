@@ -1,5 +1,5 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "ddcLicenseKey": {
@@ -228,19 +228,38 @@
                 }
             }
         },
-        "dc": {
-            "vnet": "[resourceId('Microsoft.Network/virtualNetworks', 'swarm-vnet')]",
-            "subnet": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'swarm-vnet', 'swarm-subnet')]",
-            "vmSize": "Standard_DS2_v2",
-            "imagePublisher": "MicrosoftWindowsServer",
-            "imageOffer": "WindowsServer",
-            "imageSku": "2016-Datacenter",
-            "domainName": "[parameters('domainName')]"
-        },
-        "scripts-base": "https://raw.githubusercontent.com/stevenfollis/shipyard/master/active-directory/scripts/",        
-        "scripts": {
-            "configureAD": "[concat(variables('scripts-base'), 'CreateADPDC.zip')]",
-            "createTestUsers": "[concat(variables('scripts-base'), 'CreateTestUsers.ps1')]"
+        "omsName": "[concat('ddc', substring(uniqueString(resourceGroup().id), 0, 4))]",
+        "oms": {
+            "templateUrl": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/oms-all-deploy/azuredeploy.json",
+            "parameters": {
+                "omsRecoveryVaultName": {
+                    "value": "[variables('omsName')]"
+                },
+                "omsRecoveryVaultRegion": {
+                    "value": "East US"
+                },
+                "omsWorkspaceName": {
+                    "value": "[variables('omsName')]"
+                },
+                "omsWorkspaceRegion": {
+                    "value": "East US"
+                },
+                "omsAutomationAccountName": {
+                    "value": "[variables('omsName')]"
+                },
+                "omsAutomationRegion": {
+                    "value": "East US 2"
+                },
+                "azureAdminPwd": {
+                    "value": "GEN-PASSWORD"
+                },
+                "azureAdmin": {
+                    "value": "azureadmin"
+                },
+                "_artifactsLocation": {
+                    "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/oms-all-deploy"
+                }
+            }
         }
     },
     "resources": [
@@ -257,149 +276,34 @@
             }
         },
         {
-            "apiVersion": "2016-03-30",
-            "type": "Microsoft.Network/publicIPAddresses",
-            "name": "dc-public-ip",
-            "location": "[resourceGroup().location]",
+            "name": "oms",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2017-05-10",
             "properties": {
-                "publicIPAllocationMethod": "Dynamic",
-                "dnsSettings": {
-                    "domainNameLabel": "[concat('dc-', resourceGroup().name)]"
-                }
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('oms').templateUrl]"
+                },
+                "parameters": "[variables('oms').parameters]"
             }
         },
         {
-            "type": "Microsoft.Network/networkInterfaces",
-            "name": "dc",
-            "apiVersion": "2017-06-01",
+            "apiVersion": "2015-11-01-preview",
+            "type": "Microsoft.OperationsManagement/solutions",
             "location": "[resourceGroup().location]",
+            "name": "[concat('Containers', '(', variables('omsName'), ')')]",
+            "id": "[resourceId('Microsoft.OperationsManagement/solutions', concat('Containers', '(', variables('omsName'), ')'))]",
             "properties": {
-                "ipConfigurations": [
-                    {
-                        "name": "ipconfig",
-                        "properties": {
-                            "privateIPAllocationMethod": "Dynamic",
-                            "subnet": {
-                                "id": "[variables('dc').subnet]"
-                            },
-                            "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'dc-public-ip')]"
-                            }
-                        }
-                    }
-                ]
+                "workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
+            },
+            "plan": {
+                "name": "[concat('Containers', '(', variables('omsName'), ')')]",
+                "product": "[concat('OMSGallery/', 'Containers')]",
+                "promotionCode": "",
+                "publisher": "Microsoft"
             },
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/deployments', 'd4a')]"
-            ]
-        },
-        {
-            "type": "Microsoft.Compute/virtualMachines",
-            "name": "dc",
-            "apiVersion": "2016-04-30-preview",
-            "location": "[resourceGroup().location]",
-            "properties": {
-                "hardwareProfile": {
-                    "vmSize": "[variables('dc').vmSize]"
-                },
-                "storageProfile": {
-                    "imageReference": {
-                        "publisher": "[variables('dc').imagePublisher]",
-                        "offer": "[variables('dc').imageOffer]",
-                        "sku": "[variables('dc').imageSku]",
-                        "version": "latest"
-                    },
-                    "osDisk": {
-                        "name": "dc",
-                        "createOption": "FromImage",
-                        "managedDisk": {
-                            "storageAccountType": "Premium_LRS"
-                        },
-                        "caching": "ReadWrite"
-                    },
-                    "dataDisks": [
-                        {
-                            "name": "dc-data-disk",
-                            "diskSizeGB": 32,
-                            "lun": 0,
-                            "managedDisk": {
-                                "storageAccountType": "Premium_LRS"
-                            },
-                            "createOption": "Empty",
-                            "caching": "None"
-                        }
-                    ]
-                },
-                "osProfile": {
-                    "computerName": "dc",
-                    "adminUsername": "docker",
-                    "adminPassword": "Docker123456!"
-                },
-                "networkProfile": {
-                    "networkInterfaces": [
-                        {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', 'dc')]"
-                        }
-                    ]
-                }
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/networkInterfaces', 'dc')]"
-            ],
-            "resources": [
-                {
-                    "type": "extensions",
-                    "name": "CreateADForest",
-                    "apiVersion": "2017-03-30",
-                    "location": "[resourceGroup().location]",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Compute/virtualMachines', 'dc')]"
-                    ],
-                    "properties": {
-                        "publisher": "Microsoft.Powershell",
-                        "type": "DSC",
-                        "typeHandlerVersion": "2.19",
-                        "autoUpgradeMinorVersion": true,
-                        "settings": {
-                            "ModulesUrl": "[variables('scripts').configureAD]",
-                            "ConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
-                            "Properties": {
-                                "DomainName": "[variables('dc').domainName]",
-                                "AdminCreds": {
-                                    "UserName": "eeadmin",
-                                    "Password": "PrivateSettingsRef:AdminPassword"
-                                }
-                            }
-                        },
-                        "protectedSettings": {
-                            "Items": {
-                                "AdminPassword": "Docker123!Docker123!"
-                            }
-                        }
-                    }
-                },
-                {
-                    "type": "extensions",
-                    "name": "CreateTestUsers",
-                    "apiVersion": "2017-03-30",
-                    "location": "[resourceGroup().location]",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Compute/virtualMachines', 'dc')]",
-                        "[resourceId('Microsoft.Compute/virtualMachines/extensions', 'dc', 'CreateADForest')]"
-                    ],
-                    "properties": {
-                        "publisher": "Microsoft.Compute",
-                        "type": "CustomScriptExtension",
-                        "typeHandlerVersion": "1.9",
-                        "autoUpgradeMinorVersion": true,
-                        "settings": {
-                            "fileUris": [
-                                "[variables('scripts').createTestUsers]"
-                            ],
-                            "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File CreateTestUsers.ps1 -numberUsers ', parameters('numberUsers'), ' -targetOU \"CN=Users,DC=', split(parameters('domainName'), '.')[0],',DC=',split(parameters('domainName'), '.')[1], '\"')]"
-                        }
-                    }
-                }
+                "Microsoft.Resources/deployments/oms"
             ]
         }
     ],
