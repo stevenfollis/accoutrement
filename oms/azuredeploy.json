@@ -2,41 +2,60 @@
     "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "ddcLicenseKey": {
-            "type": "string",
-            "metadata": {
-                "description": "Upload your Docker Datacenter License Key"
-            }
-        },
         "adServicePrincipalAppID": {
-            "type": "string",
             "metadata": {
                 "description": "AD ServicePrincipal App ID"
-            }
+            },
+            "type": "string"
         },
         "adServicePrincipalAppSecret": {
-            "type": "securestring",
             "metadata": {
                 "description": "AD ServicePrincipal App Secret"
-            }
+            },
+            "type": "securestring"
         },
-        "sshPublicKey": {
-            "type": "string",
+        "ddcLicense": {
             "metadata": {
-                "description": "The SSH public key used to authenticate with the created swarm. Usually available in $HOME/.ssh/id_rsa.pub file"
-            }
+                "description": "Upload your Docker Enterprise Edition License Key"
+            },
+            "type": "securestring"
+        },
+        "ddcPassword": {
+            "maxLength": 40,
+            "metadata": {
+                "description": "Please enter the password you want to use for Docker Enterprise Edition."
+            },
+            "minLength": 8,
+            "type": "securestring"
+        },
+        "ddcUsername": {
+            "defaultValue": "admin",
+            "metadata": {
+                "description": "Please enter the username you want to use for Docker Enterprise Edition."
+            },
+            "type": "string"
+        },
+        "enableSystemPrune": {
+            "allowedValues": [
+                "yes",
+                "no"
+            ],
+            "defaultValue": "no",
+            "metadata": {
+                "description": "Cleans up unused images, containers, networks and volumes"
+            },
+            "type": "string"
         },
         "managerCount": {
-            "defaultValue": 1,
             "allowedValues": [
                 1,
                 3,
                 5
             ],
+            "defaultValue": 3,
             "type": "int"
         },
         "managerVMSize": {
-            "defaultValue": "Standard_D2_v2",
             "allowedValues": [
                 "Standard_A0",
                 "Standard_A1",
@@ -86,13 +105,26 @@
                 "Standard_GS4",
                 "Standard_GS5"
             ],
-            "type": "string",
+            "defaultValue": "Standard_D2_v2",
             "metadata": {
                 "description": "The size of the created Manager machines"
-            }
+            },
+            "type": "string"
+        },
+        "sshPublicKey": {
+            "metadata": {
+                "description": "The SSH public key used to authenticate with the created swarm. Usually available in $HOME/.ssh/id_rsa.pub file"
+            },
+            "type": "string"
+        },
+        "swarmName": {
+            "defaultValue": "dockerswarm",
+            "metadata": {
+                "description": "Define how the swarm resources should be named."
+            },
+            "type": "string"
         },
         "workerCount": {
-            "defaultValue": 1,
             "allowedValues": [
                 1,
                 2,
@@ -110,13 +142,13 @@
                 14,
                 15
             ],
-            "type": "int",
+            "defaultValue": 1,
             "metadata": {
                 "description": "Number of Worker nodes"
-            }
+            },
+            "type": "int"
         },
         "workerVMSize": {
-            "defaultValue": "Standard_D2_v2",
             "allowedValues": [
                 "Standard_A0",
                 "Standard_A1",
@@ -166,31 +198,18 @@
                 "Standard_GS4",
                 "Standard_GS5"
             ],
-            "type": "string",
+            "defaultValue": "Standard_D2_v2",
             "metadata": {
                 "description": "The size of the created machines"
-            }
-        },
-        "domainName": {
-            "type": "string",
-            "defaultValue": "contoso.local",
-            "metadata": {
-                "description": "Name of the domain used by Active Directory"
-            }
-        },
-        "numberUsers": {
-            "type": "int",
-            "defaultValue": 5000,
-            "metadata": {
-                "description": "Number of test users to be added to the Active Directory"
-            }
+            },
+            "type": "string"
         }
     },
     "variables": {
         "d4a": {
             "templateUrl": "https://gallery.azure.com/artifact/20161101/docker.dockerdatacenterdocker-standard.1.0.1/Artifacts/mainTemplate.json",
             "parameters": {
-                "ddcLicenseKey": {
+                "ddcLicense": {
                     "value": "[parameters('ddcLicenseKey')]"
                 },
                 "ddcUsername": {
@@ -206,7 +225,7 @@
                     "value": "[parameters('adServicePrincipalAppSecret')]"
                 },
                 "enableSystemPrune": {
-                    "value": "yes"
+                    "value": "no"
                 },
                 "managerCount": {
                     "value": "[parameters('managerCount')]"
