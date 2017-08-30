@@ -54,7 +54,7 @@
             "apiVersion": "2017-06-01",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'swarm-vnet', dc-subnet')]"
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'swarm-vnet', 'dc-subnet')]"
             ],
             "properties": {
                 "ipConfigurations": [
