@@ -53,7 +53,7 @@
                         "name": "ipconfig",
                         "properties": {
                             "privateIPAllocationMethod": "Static",
-                            "privateIPAddress": "172.31.0.255",
+                            "privateIPAddress": "172.31.0.250",
                             "subnet": {
                                 "id": "[variables('dc').subnet]"
                             },
