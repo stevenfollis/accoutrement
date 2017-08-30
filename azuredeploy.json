@@ -251,9 +251,9 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('ad').templateUrl]"
+                    "uri": "[concat(variables('_artifactsLocation'), variables('dc').templateUrl)]"
                 },
-                "parameters": "[variables('ad').parameters]"
+                "parameters": "[variables('dc').parameters]"
             },
             "dependsOn": [
                 "Microsoft.Resources/deployments/d4a"
