@@ -215,6 +215,10 @@
                 }
             }
         },
+        "dc": {
+            "templateUrl": "/active-directory/azuredeploy.json",
+            "parameters": {}
+        },
         "oms": {
             "templateUrl": "/oms/azuredeploy.json",
             "parameters": {
@@ -241,13 +245,28 @@
             }
         },
         {
+            "name": "dc",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2017-05-10",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('ad').templateUrl]"
+                },
+                "parameters": "[variables('ad').parameters]"
+            },
+            "dependsOn": [
+                "Microsoft.Resources/deployments/d4a"
+            ]
+        },
+        {
             "name": "oms",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(variables('_artifactsLocation'), variables('oms').templateUrl]"
+                    "uri": "[concat(variables('_artifactsLocation'), variables('oms').templateUrl)]"
                 },
                 "parameters": "[variables('oms').parameters]"
             }
