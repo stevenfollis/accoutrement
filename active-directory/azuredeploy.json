@@ -168,7 +168,7 @@
                             "fileUris": [
                                 "[variables('scripts').createTestUsers]"
                             ],
-                            "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File CreateTestUsers.ps1 -numberUsers ', parameters('numberUsers'), ' -targetOU \"CN=Users,DC=', split(variables('domainName'), '.')[0],',DC=',split(variables('domainName'), '.')[1], '\"')]"
+                            "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File CreateTestUsers.ps1 -numberUsers ', parameters('numberUsers'), ' -targetOU \"CN=Users,DC=', split(variables('dc').domainName, '.')[0],',DC=',split(variables('dc').domainName, '.')[1], '\"')]"
                         }
                     }
                 }
