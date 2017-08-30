@@ -13,7 +13,7 @@
     "variables": {
         "dc": {
             "vnet": "[resourceId('Microsoft.Network/virtualNetworks', 'swarm-vnet')]",
-            "subnet": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'swarm-vnet', 'dc-subnet')]",
+            "subnet": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'swarm-vnet', 'swarm-subnet')]",
             "vmSize": "Standard_DS2_v2",
             "imagePublisher": "MicrosoftWindowsServer",
             "imageOffer": "WindowsServer",
@@ -40,21 +40,12 @@
             }
         },
         {
-            "apiVersion": "2017-03-01",
-            "type": "Microsoft.Network/virtualNetworks/subnets",
-            "name": "[concat('swarm-vnet', '/', 'dc-subnet')]",
-            "location": "[resourceGroup().location]",
-            "properties": {
-                "addressPrefix": "10.0.0.0/24"
-            }
-        },
-        {
             "type": "Microsoft.Network/networkInterfaces",
             "name": "dc",
             "apiVersion": "2017-06-01",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'swarm-vnet', 'dc-subnet')]"
+                "[resourceId('Microsoft.Network/publicIPAddresses', 'dc-public-ip')]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -62,7 +53,7 @@
                         "name": "ipconfig",
                         "properties": {
                             "privateIPAllocationMethod": "Static",
-                            "privateIPAddress": "10.0.0.3",
+                            "privateIPAddress": "172.31.0.255",
                             "subnet": {
                                 "id": "[variables('dc').subnet]"
                             },
