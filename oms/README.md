@@ -4,10 +4,11 @@
 
 The recently GA'd [Container Monitoring Solution](https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-containers) is a turn-key solutino for keeping tabs on both Docker Swarm nodes, and running containers. 
 
+![screenshot](./media/screen06.png)
+
 ## Configuration
 
 After the template finishes provisioning, we will globally deploy the OMS Agent via the [microsoft/oms](https://hub.docker.com/r/microsoft/oms/) container to each node, using Secrets to pass in configuration information.  
-
 
 ### Retrieve Workspace details
 
