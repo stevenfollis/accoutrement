@@ -20,6 +20,12 @@
             },
             "type": "securestring"
         },
+        "sshPublicKey": {
+            "metadata": {
+                "description": "The SSH public key used to authenticate with the created swarm. Usually available in $HOME/.ssh/id_rsa.pub file"
+            },
+            "type": "string"
+        },
         "managerCount": {
             "allowedValues": [
                 1,
@@ -82,12 +88,6 @@
             "defaultValue": "Standard_D2_v2",
             "metadata": {
                 "description": "The size of the created Manager machines"
-            },
-            "type": "string"
-        },
-        "sshPublicKey": {
-            "metadata": {
-                "description": "The SSH public key used to authenticate with the created swarm. Usually available in $HOME/.ssh/id_rsa.pub file"
             },
             "type": "string"
         },
