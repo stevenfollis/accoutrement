@@ -4,34 +4,11 @@ The Docker Universal Control Plane (UCP) is capable of managing its own set of u
 
 This Azure Resource Manager (ARM) Template provisions the following:
 
-* [Docker Enterprise Edition for Azure](https://docs.docker.com/datacenter/install/azure/)
-
 * Windows Server 2016 
 
 * Desired State Configuration (DSC) VM Extension to enable and configure the Active Directory Domain Services Role
 
 * PowerShell Custom Script Extension to pre-populate the directory with sample users and groups
-
-## Prerequisites
-The following are needed prior to running the template:
-
-* Docker Enterprise Edition License - a free one month trial is available at the [Docker Store](https://store.docker.com/editions/enterprise/docker-ee-trial?plan=free-trial&plan=free-trial&tab=description)
-
-* Azure Subscription - Available with an Enterprise Agreement, MSDN Subscription, or with the [free trial](https://azure.microsoft.com/en-us/free/)
-
-* Service Principal access credentials, which you can generate by following the steps in [Docker for Azure Setup and Prerequisites](https://docs.docker.com/docker-for-azure/#configuration).
-
-* An SSH public/private key pair, which you can generate by following the steps in [How to create and use an SSH public and private key pair for Linux VMs in Azure](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys). Save the public and private keys in a convenient location, like in the same directory as the Docker license, and be sure to remember the password for the key pair.
-
-## Deploy the ARM Template
-
-Click the following button to begin the provisioning process via the Azure Portal:
-
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fstevenfollis%2Fshipyard%2Fmaster%2Factive-directory%2Fazuredeploy.json" target="_blank">
-    <img src="http://azuredeploy.net/deploybutton.png"/>
-</a>
-
-This file is also deployable via the [Azure CLI](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-template-deploy-cli) or [PowerShell](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-template-deploy).
 
 ## Architecture
 
@@ -72,6 +49,8 @@ Before deployment you will need to provide parameters:
 
 ## Configuration
 The template provisions all necessary infrastructure, however a bit of configuration will be necessary to plumb the components together.
+
+> Screenshots are from Docker EE 17.03 and have not yet been updated to reflect the new user interface in Docker EE 17.06
 
 ### Configure LDAP
 Once the deployment finishes, open the [Azure Portal](https://portal.azure.com) and navigate to **Resource Groups** -> **\<your RG Name>** -> **Deployments**.  The Deployments blade lists all deployments that have been executed within our Resource Group. 
