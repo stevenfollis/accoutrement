@@ -170,6 +170,20 @@
                 "description": "The size of the created machines"
             },
             "type": "string"
+        },
+        "deployActiveDirectory": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Deploy an Active Directory Domain Controller VM in addition to Docker EE for Azure?"
+            }
+        },
+        "deployOMS": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Deploy Operations Management Suite (OMS) in addition to Docker EE for Azure?"
+            }
         }
     },
     "variables": {
@@ -248,6 +262,7 @@
             "name": "dc",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
+            "condition": "[parameters('deployActiveDirectory')]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -263,6 +278,7 @@
             "name": "oms",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
+            "condition": "[parameters('deployOMS')]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
