@@ -42,8 +42,8 @@
             "dtr": "[concat('dtrstorage', uniqueString(resourceGroup().id))]"
         },
         "vNet": {
-            "name": "[parameters('labName')]",
-            "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('labName'))]"
+            "name": "swarm-vnet",
+            "id": "[resourceId('Microsoft.Network/virtualNetworks', 'swarm-vnet')]"
         },
         "managers": {
             "instances": "[parameters('vmInstancesManagers')]",
@@ -91,7 +91,7 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/virtualNetworks",
-            "name": "[parameters('labName')]",
+            "name": "swarm-vnet",
             "location": "[resourceGroup().location]",
             "tags": {
                 "displayName": "VirtualNetwork"
@@ -122,7 +122,7 @@
                         }
                     },
                     {
-                        "name": "dc",
+                        "name": "swarm-subnet",
                         "properties": {
                             "addressPrefix": "10.0.3.0/24"
                         }
@@ -1014,144 +1014,6 @@
             },
             "dependsOn": [
                 "[resourceId('Microsoft.Network/publicIPAddresses', 'dtr')]"
-            ]
-        },
-        {
-            "type": "Microsoft.Network/networkInterfaces",
-            "name": "dc",
-            "apiVersion": "2017-06-01",
-            "location": "[resourceGroup().location]",
-            "properties": {
-                "ipConfigurations": [
-                    {
-                        "name": "ipconfig",
-                        "properties": {
-                            "privateIPAllocationMethod": "Dynamic",
-                            "subnet": {
-                                "id": "[variables('dc').subnet]"
-                            }
-                        }
-                    }
-                ]
-            },
-            "dependsOn": [
-                "[variables('vNet').id]"
-            ]
-        },
-        {
-            "type": "Microsoft.Compute/virtualMachines",
-            "name": "dc",
-            "apiVersion": "2016-04-30-preview",
-            "location": "[resourceGroup().location]",
-            "properties": {
-                "hardwareProfile": {
-                    "vmSize": "[variables('dc').vmSize]"
-                },
-                "storageProfile": {
-                    "imageReference": {
-                        "publisher": "[variables('dc').imagePublisher]",
-                        "offer": "[variables('dc').imageOffer]",
-                        "sku": "[variables('dc').imageSku]",
-                        "version": "latest"
-                    },
-                    "osDisk": {
-                        "name": "dc",
-                        "createOption": "FromImage",
-                        "managedDisk": {
-                            "storageAccountType": "Premium_LRS"
-                        },
-                        "caching": "ReadWrite"
-                    },
-                    "dataDisks": [
-                        {
-                            "name": "dc-data-disk",
-                            "diskSizeGB": 32,
-                            "lun": 0,
-                            "managedDisk": {
-                                "storageAccountType": "Premium_LRS"
-                            },
-                            "createOption": "Empty",
-                            "caching": "None"
-                        }
-                    ]
-                },
-                "osProfile": {
-                    "computerName": "[concat(parameters('labName'), 'dc')]",
-                    "adminUsername": "eeadmin",
-                    "adminPassword": "Docker123!Docker123!"
-                },
-                "networkProfile": {
-                    "networkInterfaces": [
-                        {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', 'dc')]"
-                        }
-                    ]
-                },
-                "diagnosticsProfile": {
-                    "bootDiagnostics": {
-                        "enabled": true,
-                        "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts', variables('storage').diagnostics), '2016-01-01').primaryEndpoints.blob]"
-                    }
-                }
-            },
-            "dependsOn": [
-                "[concat('Microsoft.Storage/storageAccounts/', variables('storage').diagnostics)]",
-                "[resourceId('Microsoft.Network/networkInterfaces', 'dc')]"
-            ],
-            "resources": [
-                {
-                    "type": "extensions",
-                    "name": "CreateADForest",
-                    "apiVersion": "2017-03-30",
-                    "location": "[resourceGroup().location]",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Compute/virtualMachines', 'dc')]"
-                    ],
-                    "properties": {
-                        "publisher": "Microsoft.Powershell",
-                        "type": "DSC",
-                        "typeHandlerVersion": "2.19",
-                        "autoUpgradeMinorVersion": true,
-                        "settings": {
-                            "ModulesUrl": "[variables('scripts').configureAD]",
-                            "ConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
-                            "Properties": {
-                                "DomainName": "[variables('dc').domainName]",
-                                "AdminCreds": {
-                                    "UserName": "eeadmin",
-                                    "Password": "PrivateSettingsRef:AdminPassword"
-                                }
-                            }
-                        },
-                        "protectedSettings": {
-                            "Items": {
-                                "AdminPassword": "Docker123!Docker123!"
-                            }
-                        }
-                    }
-                },
-                {
-                    "type": "extensions",
-                    "name": "CreateTestUsers",
-                    "apiVersion": "2017-03-30",
-                    "location": "[resourceGroup().location]",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Compute/virtualMachines', 'dc')]",
-                        "[resourceId('Microsoft.Compute/virtualMachines/extensions', 'dc', 'CreateADForest')]"
-                    ],
-                    "properties": {
-                        "publisher": "Microsoft.Compute",
-                        "type": "CustomScriptExtension",
-                        "typeHandlerVersion": "1.9",
-                        "autoUpgradeMinorVersion": true,
-                        "settings": {
-                            "fileUris": [
-                                "[variables('scripts').createTestUsers]"
-                            ],
-                            "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File CreateTestUsers.ps1 -numberUsers 50 -targetOU \"CN=Users,DC=contoso,DC=local\"')]"
-                        }
-                    }
-                }
             ]
         }
     ],
