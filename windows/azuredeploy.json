@@ -2,16 +2,19 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "vmInstancesWorkersWindows": {
+        "vmInstances": {
             "type": "int",
             "metadata": {
                 "description": "Number of Windows worker nodes"
             },
             "defaultValue": 3
         },
-        "labName": {
+        "vmSize": {
             "type": "string",
-            "defaultValue": "follislab"
+            "metadata": {
+                "description": "Size of the VM to be provisioned for Windows worker nodes"
+            },
+            "defaultValue": "Standard_DS2_v2"
         }
     },
     "variables": {
@@ -22,7 +25,7 @@
             "id": "[resourceId('Microsoft.Network/virtualNetworks', 'swarm-vnet')]"
         },
         "workers": {
-            "instances": "[parameters('vmInstancesWorkersWindows')]",
+            "instances": "[parameters('vmInstances')]",
             "avSet": "workers",
             "vnet": "[resourceId('Microsoft.Network/virtualNetworks', 'swarm-vnet')]",
             "subnet": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'swarm-vnet', 'swarm-subnet')]",
@@ -77,7 +80,7 @@
             "properties": {
                 "publicIPAllocationMethod": "Dynamic",
                 "dnsSettings": {
-                    "domainNameLabel": "[concat(parameters('labName'), 'worker', padLeft(copyIndex(1), 2, '0'))]"
+                    "domainNameLabel": "[concat(resourceGroup().name, '-winworker', padLeft(copyIndex(1), 2, '0'))]"
                 }
             }
         },
@@ -136,7 +139,7 @@
                         "version": "latest"
                     },
                     "osDisk": {
-                        "name": "[concat('worker', padLeft(copyIndex(1), 2, '0'))]",
+                        "name": "[concat('winworker', padLeft(copyIndex(1), 2, '0'))]",
                         "createOption": "FromImage",
                         "managedDisk": {
                             "storageAccountType": "Premium_LRS"

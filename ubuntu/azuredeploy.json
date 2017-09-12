@@ -5,7 +5,7 @@
         "labName": {
             "type": "string",
             "metadata": {
-                "description": "Short name identifying the lab ex. follislab"
+                "description": "Short name identifying the lab ex. contosolab"
             }
         },
         "vmInstancesManagers": {
