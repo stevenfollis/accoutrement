@@ -264,6 +264,13 @@
             "metadata": {
                 "description": "Deploy Operations Management Suite (OMS) in addition to Docker EE for Azure?"
             }
+        },
+        "deployWindowsWorkers": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Deploy Windows Server 2016 worker nodes in addition to Docker EE for Azure?"
+            }
         }
     },
     "variables": {
@@ -382,7 +389,7 @@
             "name": "windowsworkers",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
-            "condition": "[parameters('windowsworkers')]",
+            "condition": "[parameters('deployWindowsWorkers')]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
