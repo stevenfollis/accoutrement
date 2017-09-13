@@ -61,6 +61,7 @@ docker service create  \
     --publish 25225:25225 \
     --publish 25224:25224/udp \
     --restart-condition=on-failure \
+    --constraint node.platform.os==linux \
     --detach=false \
     microsoft/oms:latest
 
