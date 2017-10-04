@@ -274,7 +274,7 @@
         }
     },
     "variables": {
-        "_artifactsLocation": "https://raw.githubusercontent.com/stevenfollis/chantier/master",
+        "_artifactsLocation": "https://raw.githubusercontent.com/stevenfollis/accoutrement/master",
         "d4a": {
             "templateUrl": "https://gallery.azure.com/artifact/20161101/docker.dockerdatacenterdocker-standard.1.0.2/Artifacts/mainTemplate.json",
             "parameters": {
@@ -386,16 +386,16 @@
             }
         },
         {
-            "name": "windowsworkers",
+            "name": "windows",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
             "condition": "[parameters('deployWindowsWorkers')]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(variables('_artifactsLocation'), variables('windowsworkers').templateUrl)]"
+                    "uri": "[concat(variables('_artifactsLocation'), variables('windows').templateUrl)]"
                 },
-                "parameters": "[variables('windowsworkers').parameters]"
+                "parameters": "[variables('windows').parameters]"
             }
         }
     ],
