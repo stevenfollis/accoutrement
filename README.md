@@ -11,7 +11,7 @@ The template currently supports a variety of accessory templates. Click the titl
 |------------------|----------------------------------------------------------------------------------------------|
 | [Active Directory](./active-directory) | Provisions Docker EE for Azure with an AD Domain Controller pre-loaded with users and groups |
 | [Operations Management Suite](./oms) | Provisions Docker EE for Azure with OMS solution packs | 
-| [Windows Workers](./windows) | Provisions Docker EE for Azure with additional Windows Server VMs |
+| [VMSS](./vmss) | Provisions a Docker EE cluster in Azure using Ubuntu images in a Virtual Machine Scale Set |
 | [Ubuntu](./ubuntu) | Provisions a Docker EE for Ubuntu cluster on Azure IaaS VMs (does not integrate with the other accessories) |
 
 ## Prerequisites
