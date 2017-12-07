@@ -1,0 +1,1031 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "labName": {
+            "type": "string",
+            "metadata": {
+                "description": "Short name identifying the lab ex. contosolab"
+            }
+        },
+        "vmInstancesManagers": {
+            "type": "int",
+            "metadata": {
+                "description": "Number of manager nodes"
+            },
+            "defaultValue": 1
+        },
+        "vmInstancesWorkers": {
+            "type": "int",
+            "metadata": {
+                "description": "Number of worker nodes"
+            },
+            "defaultValue": 1
+        },
+        "vmInstancesDTR": {
+            "type": "int",
+            "metadata": {
+                "description": "Number of DTR worker nodes"
+            },
+            "defaultValue": 1
+        },
+        "dockerEEURL": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Subscription URL from Docker Store"
+            }
+        }
+    },
+    "variables": {
+        "storage": {
+            "dtr": "[concat('dtrstorage', uniqueString(resourceGroup().id))]"
+        },
+        "vNet": {
+            "name": "vnet",
+            "id": "[resourceId('Microsoft.Network/virtualNetworks', 'vnet')]"
+        },
+        "managers": {
+            "instances": "[parameters('vmInstancesManagers')]",
+            "subnet": "[concat(variables('vNet').id, '/subnets/', 'managers')]",
+            "vmSize": "Standard_DS2_v2",
+            "os": {
+                "publisher": "Canonical",
+                "offer": "UbuntuServer",
+                "sku": "16.04-LTS",
+                "version": "latest"
+            }
+        },
+        "workers-linux": {
+            "instances": "[parameters('vmInstancesWorkers')]",
+            "subnet": "[concat(variables('vNet').id, '/subnets/', 'workers')]",
+            "vmSize": "Standard_DS2_v2",
+            "os": {
+                "publisher": "Canonical",
+                "offer": "UbuntuServer",
+                "sku": "16.04-LTS",
+                "version": "latest"
+            }
+        },
+        "workers-windows": {
+            "instances": "[parameters('vmInstancesWorkers')]",
+            "subnet": "[concat(variables('vNet').id, '/subnets/', 'workers')]",
+            "vmSize": "Standard_DS2_v2",
+            "os": {
+                "publisher": "MicrosoftWindowsServer",
+                "offer": "WindowsServer",
+                "sku": "2016-Datacenter",
+                "version": "latest"
+            }
+        },
+        "dtr": {
+            "instances": "[parameters('vmInstancesDTR')]",
+            "subnet": "[concat(variables('vNet').id, '/subnets/', 'dtr')]",
+            "vmSize": "Standard_DS2_v2",
+            "os": {
+                "publisher": "Canonical",
+                "offer": "UbuntuServer",
+                "sku": "16.04-LTS",
+                "version": "latest"
+            }
+        },
+        "jumpbox-linux": {
+            "subnet": "[concat(variables('vNet').id, '/subnets/', 'jumpboxes')]",
+            "vmSize": "Standard_DS2_v2",
+            "os": {
+                "publisher": "Canonical",
+                "offer": "UbuntuServer",
+                "sku": "16.04-LTS",
+                "version": "latest"
+            }
+        },
+        "jumpbox-windows": {
+            "subnet": "[concat(variables('vNet').id, '/subnets/', 'jumpboxes')]",
+            "vmSize": "Standard_DS2_v2",
+            "os": {
+                "publisher": "MicrosoftWindowsServer",
+                "offer": "WindowsServer",
+                "sku": "2016-Datacenter",
+                "version": "latest"
+            }
+        },
+        "scripts": {
+            "installDockerEE": "https://raw.githubusercontent.com/stevenfollis/docker-ee-vmss/master/scripts/install-docker-ee.sh",
+            "installUCP": "https://raw.githubusercontent.com/stevenfollis/docker-ee-vmss/master/scripts/install-ucp.sh"
+        }
+    },
+    "resources": [
+        {
+            "name": "[variables('storage').dtr]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2016-01-01",
+            "sku": {
+                "name": "Standard_LRS"
+            },
+            "dependsOn": [],
+            "tags": {
+                "displayName": "DTRStorageAccount"
+            },
+            "kind": "BlobStorage",
+            "properties": {
+                "accessTier": "Hot",
+                "encryption": {
+                    "keySource": "Microsoft.Storage",
+                    "services": {
+                        "blob": {
+                            "enabled": true
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "vnet",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "VirtualNetwork"
+            },
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "managers",
+                        "properties": {
+                            "addressPrefix": "10.0.0.0/24"
+                        }
+                    },
+                    {
+                        "name": "workers",
+                        "properties": {
+                            "addressPrefix": "10.0.1.0/24"
+                        }
+                    },
+                    {
+                        "name": "dtr",
+                        "properties": {
+                            "addressPrefix": "10.0.2.0/24"
+                        }
+                    },
+                    {
+                        "name": "jumpboxes",
+                        "properties": {
+                            "addressPrefix": "10.0.3.0/24"
+                        }
+                    },
+                    {
+                        "name": "dc",
+                        "properties": {
+                            "addressPrefix": "10.0.4.0/24"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "2015-05-01-preview",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "name": "workers",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "opensesame",
+                        "properties": {
+                            "description": "YOLO",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "Internet",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 101,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "2017-08-01",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "ucp",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Basic"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[concat('ucp-', parameters('labName'))]"
+                }
+            }
+        },
+        {
+            "apiVersion": "2017-08-01",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "apps",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Basic"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[concat('apps-', parameters('labName'))]"
+                }
+            }
+        },
+        {
+            "apiVersion": "2017-08-01",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "dtr",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Basic"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static",
+                "dnsSettings": {
+                    "domainNameLabel": "[concat('dtr-', parameters('labName'))]"
+                }
+            }
+        },
+        {
+            "apiVersion": "2017-08-01",
+            "type": "Microsoft.Network/publicIpAddresses",
+            "name": "jumpbox-linux",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Basic"
+            },
+            "properties": {
+                "dnsSettings": {
+                    "domainNameLabel": "[concat(parameters('labName'), 'linjb')]"
+                }
+            }
+        },
+        {
+            "apiVersion": "2017-08-01",
+            "type": "Microsoft.Network/publicIpAddresses",
+            "name": "jumpbox-windows",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Basic"
+            },
+            "properties": {
+                "dnsSettings": {
+                    "domainNameLabel": "[concat(parameters('labName'), 'winjb')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/loadBalancers",
+            "name": "ucp",
+            "apiVersion": "2017-08-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Basic"
+            },
+            "properties": {
+                "frontendIPConfigurations": [
+                    {
+                        "name": "LoadBalancerFrontEnd",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'ucp')]"
+                            }
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "Managers"
+                    }
+                ],
+                "loadBalancingRules": [
+                    {
+                        "name": "ucp443",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'ucp'), '/frontendIpConfigurations/LoadBalancerFrontEnd')]"
+                            },
+                            "frontendPort": 443,
+                            "backendPort": 443,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 4,
+                            "protocol": "Tcp",
+                            "loadDistribution": "Default",
+                            "backendAddressPool": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'ucp'), '/backendAddressPools/Managers')]"
+                            },
+                            "probe": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'ucp'), '/probes/probe443')]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "ucp80",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'ucp'), '/frontendIpConfigurations/LoadBalancerFrontEnd')]"
+                            },
+                            "frontendPort": 80,
+                            "backendPort": 80,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 4,
+                            "protocol": "Tcp",
+                            "loadDistribution": "Default",
+                            "backendAddressPool": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'ucp'), '/backendAddressPools/Managers')]"
+                            },
+                            "probe": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'ucp'), '/probes/probe80')]"
+                            }
+                        }
+                    }
+                ],
+                "inboundNatPools": [],
+                "probes": [
+                    {
+                        "name": "probe443",
+                        "properties": {
+                            "protocol": "Tcp",
+                            "port": 443,
+                            "intervalInSeconds": 5,
+                            "numberOfProbes": 2
+                        }
+                    },
+                    {
+                        "name": "probe80",
+                        "properties": {
+                            "protocol": "Tcp",
+                            "port": 80,
+                            "intervalInSeconds": 5,
+                            "numberOfProbes": 2
+                        }
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', 'ucp')]"
+            ]
+        },
+        {
+            "type": "Microsoft.Network/loadBalancers",
+            "name": "apps",
+            "apiVersion": "2017-08-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Basic"
+            },
+            "properties": {
+                "frontendIPConfigurations": [
+                    {
+                        "name": "LoadBalancerFrontEnd",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'apps')]"
+                            }
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "Workers"
+                    }
+                ],
+                "copy": [
+                    {
+                        "name": "loadBalancingRules",
+                        "count": 25,
+                        "input": {
+                            "name": "[concat('publish', copyIndex('loadBalancingRules', 30000))]",
+                            "properties": {
+                                "loadDistribution": "Default",
+                                "frontendIPConfiguration": {
+                                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'apps'), '/frontendIpConfigurations/LoadBalancerFrontEnd')]"
+                                },
+                                "backendAddressPool": {
+                                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'apps'), '/backendAddressPools/Workers')]"
+                                },
+                                "protocol": "Tcp",
+                                "frontendPort": "[copyIndex('loadBalancingRules', 30000)]",
+                                "backendPort": "[copyIndex('loadBalancingRules', 30000)]",
+                                "enableFloatingIP": false,
+                                "idleTimeoutInMinutes": 5,
+                                "probe": {
+                                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'apps'), '/probes/probeSSH')]"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "inboundNatPools": [],
+                "probes": [
+                    {
+                        "name": "probeSSH",
+                        "properties": {
+                            "protocol": "Tcp",
+                            "port": 22,
+                            "intervalInSeconds": 5,
+                            "numberOfProbes": 2
+                        }
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', 'apps')]"
+            ]
+        },
+        {
+            "type": "Microsoft.Network/loadBalancers",
+            "name": "dtr",
+            "apiVersion": "2017-06-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Basic"
+            },
+            "properties": {
+                "frontendIPConfigurations": [
+                    {
+                        "name": "LoadBalancerFrontEnd",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'dtr')]"
+                            }
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "LoadBalancerBackEnd"
+                    }
+                ],
+                "loadBalancingRules": [
+                    {
+                        "name": "ucp443",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'dtr'), '/frontendIpConfigurations/LoadBalancerFrontEnd')]"
+                            },
+                            "frontendPort": 443,
+                            "backendPort": 443,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 4,
+                            "protocol": "Tcp",
+                            "loadDistribution": "Default",
+                            "backendAddressPool": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'dtr'), '/backendAddressPools/LoadBalancerBackEnd')]"
+                            },
+                            "probe": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'dtr'), '/probes/probe443')]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "ucp80",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'dtr'), '/frontendIpConfigurations/LoadBalancerFrontEnd')]"
+                            },
+                            "frontendPort": 80,
+                            "backendPort": 80,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 4,
+                            "protocol": "Tcp",
+                            "loadDistribution": "Default",
+                            "backendAddressPool": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'dtr'), '/backendAddressPools/LoadBalancerBackEnd')]"
+                            },
+                            "probe": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'dtr'), '/probes/probe80')]"
+                            }
+                        }
+                    }
+                ],
+                "inboundNatPools": [],
+                "probes": [
+                    {
+                        "name": "probe443",
+                        "properties": {
+                            "protocol": "Tcp",
+                            "port": 443,
+                            "intervalInSeconds": 5,
+                            "numberOfProbes": 2
+                        }
+                    },
+                    {
+                        "name": "probe80",
+                        "properties": {
+                            "protocol": "Tcp",
+                            "port": 80,
+                            "intervalInSeconds": 5,
+                            "numberOfProbes": 2
+                        }
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', 'dtr')]"
+            ]
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachineScaleSets",
+            "name": "managers",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2017-03-30",
+            "dependsOn": [
+                "[concat('Microsoft.Network/loadBalancers/', 'ucp')]",
+                "[concat('Microsoft.Network/virtualNetworks/', variables('vNet').name)]"
+            ],
+            "sku": {
+                "name": "[variables('managers').vmSize]",
+                "tier": "Standard",
+                "capacity": "[variables('managers').instances]"
+            },
+            "properties": {
+                "overprovision": "True",
+                "upgradePolicy": {
+                    "mode": "Manual"
+                },
+                "virtualMachineProfile": {
+                    "storageProfile": {
+                        "imageReference": "[variables('managers').os]",
+                        "osDisk": {
+                            "createOption": "FromImage",
+                            "caching": "ReadWrite"
+                        }
+                    },
+                    "osProfile": {
+                        "computerNamePrefix": "manager-",
+                        "adminUsername": "eeadmin",
+                        "adminPassword": "Docker123!"
+                    },
+                    "networkProfile": {
+                        "networkInterfaceConfigurations": [
+                            {
+                                "name": "nic",
+                                "properties": {
+                                    "primary": "true",
+                                    "ipConfigurations": [
+                                        {
+                                            "name": "ipconfig",
+                                            "properties": {
+                                                "subnet": {
+                                                    "id": "[variables('managers').subnet]"
+                                                },
+                                                "loadBalancerBackendAddressPools": [
+                                                    {
+                                                        "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/', 'ucp', '/backendAddressPools/', 'Managers')]"
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    "extensionProfile": {
+                        "extensions": [
+                            {
+                                "name": "InstallDockerEE",
+                                "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
+                                "properties": {
+                                    "publisher": "Microsoft.Azure.Extensions",
+                                    "type": "CustomScript",
+                                    "typeHandlerVersion": "2.0",
+                                    "autoUpgradeMinorVersion": true,
+                                    "settings": {
+                                        "fileUris": [
+                                            "[variables('scripts').installDockerEE]"
+                                        ]
+                                    },
+                                    "protectedSettings": {
+                                        "commandToExecute": "[concat('sh install-docker-ee.sh ', parameters('dockerEEURL'))]"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachineScaleSets",
+            "name": "workers-linux",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2017-03-30",
+            "dependsOn": [
+                "[concat('Microsoft.Network/loadBalancers/', 'apps')]",
+                "[concat('Microsoft.Network/virtualNetworks/', variables('vNet').name)]"
+            ],
+            "sku": {
+                "name": "[variables('workers-linux').vmSize]",
+                "tier": "Standard",
+                "capacity": "[variables('workers-linux').instances]"
+            },
+            "properties": {
+                "singlePlacementGroup": "true",
+                "overprovision": "true",
+                "upgradePolicy": {
+                    "mode": "Manual",
+                    "automaticOSUpgrade": "false"
+                },
+                "virtualMachineProfile": {
+                    "storageProfile": {
+                        "imageReference": "[variables('workers-linux').os]",
+                        "osDisk": {
+                            "createOption": "FromImage"
+                        },
+                        "dataDisks": [
+                            {
+                                "diskSizeGB": 128,
+                                "createOption": "Empty",
+                                "lun": 0,
+                                "managedDisk": {
+                                    "storageAccountType": "Premium_LRS"
+                                }
+                            }
+                        ]
+                    },
+                    "osProfile": {
+                        "computerNamePrefix": "worker-",
+                        "adminUsername": "eeadmin",
+                        "adminPassword": "Docker123!"
+                    },
+                    "networkProfile": {
+                        "networkInterfaceConfigurations": [
+                            {
+                                "name": "nic",
+                                "properties": {
+                                    "primary": "true",
+                                    "ipConfigurations": [
+                                        {
+                                            "name": "ipconfig",
+                                            "properties": {
+                                                "subnet": {
+                                                    "id": "[variables('workers-linux').subnet]"
+                                                },
+                                                "loadBalancerBackendAddressPools": [
+                                                    {
+                                                        "id": "[concat(resourceId('Microsoft.Network/loadBalancers', 'apps'), '/backendAddressPools/Workers')]"
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "networkSecurityGroup": {
+                                        "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'workers')]"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "extensionProfile": {
+                        "extensions": [
+                            {
+                                "name": "InstallDockerEE",
+                                "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
+                                "properties": {
+                                    "publisher": "Microsoft.Azure.Extensions",
+                                    "type": "CustomScript",
+                                    "typeHandlerVersion": "2.0",
+                                    "autoUpgradeMinorVersion": true,
+                                    "settings": {
+                                        "fileUris": [
+                                            "[variables('scripts').installDockerEE]"
+                                        ]
+                                    },
+                                    "protectedSettings": {
+                                        "commandToExecute": "[concat('sh install-docker-ee.sh ', parameters('dockerEEURL'))]"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachineScaleSets",
+            "name": "workers-windows",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2017-03-30",
+            "dependsOn": [
+                "[concat('Microsoft.Network/loadBalancers/', 'apps')]",
+                "[concat('Microsoft.Network/virtualNetworks/', variables('vNet').name)]"
+            ],
+            "sku": {
+                "name": "[variables('workers-windows').vmSize]",
+                "tier": "Standard",
+                "capacity": "[variables('workers-windows').instances]"
+            },
+            "properties": {
+                "overprovision": "true",
+                "upgradePolicy": {
+                    "mode": "Manual"
+                },
+                "virtualMachineProfile": {
+                    "storageProfile": {
+                        "imageReference": "[variables('workers-windows').os]",
+                        "osDisk": {
+                            "createOption": "FromImage"
+                        },
+                        "dataDisks": [
+                            {
+                                "diskSizeGB": 128,
+                                "createOption": "Empty",
+                                "lun": 0,
+                                "managedDisk": {
+                                    "storageAccountType": "Premium_LRS"
+                                }
+                            }
+                        ]
+                    },
+                    "osProfile": {
+                        "computerNamePrefix": "worker-",
+                        "adminUsername": "eeadmin",
+                        "adminPassword": "Docker123!"
+                    },
+                    "networkProfile": {
+                        "networkInterfaceConfigurations": [
+                            {
+                                "name": "nic",
+                                "properties": {
+                                    "primary": "true",
+                                    "ipConfigurations": [
+                                        {
+                                            "name": "ipconfig",
+                                            "properties": {
+                                                "subnet": {
+                                                    "id": "[variables('workers-windows').subnet]"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    "extensionProfile": {
+                        "extensions": []
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachineScaleSets",
+            "name": "dtr",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2017-03-30",
+            "dependsOn": [
+                "[concat('Microsoft.Network/loadBalancers/', 'dtr')]",
+                "[concat('Microsoft.Network/virtualNetworks/', variables('vNet').name)]"
+            ],
+            "sku": {
+                "name": "[variables('dtr').vmSize]",
+                "tier": "Standard",
+                "capacity": "[variables('dtr').instances]"
+            },
+            "properties": {
+                "overprovision": "true",
+                "upgradePolicy": {
+                    "mode": "Manual"
+                },
+                "virtualMachineProfile": {
+                    "storageProfile": {
+                        "osDisk": {
+                            "createOption": "FromImage",
+                            "caching": "ReadWrite"
+                        },
+                        "imageReference": "[variables('dtr').os]"
+                    },
+                    "osProfile": {
+                        "computerNamePrefix": "dtr-",
+                        "adminUsername": "eeadmin",
+                        "adminPassword": "Docker123!"
+                    },
+                    "networkProfile": {
+                        "networkInterfaceConfigurations": [
+                            {
+                                "name": "nic",
+                                "properties": {
+                                    "primary": "true",
+                                    "ipConfigurations": [
+                                        {
+                                            "name": "ipconfig",
+                                            "properties": {
+                                                "subnet": {
+                                                    "id": "[variables('dtr').subnet]"
+                                                },
+                                                "loadBalancerBackendAddressPools": [
+                                                    {
+                                                        "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/', 'dtr', '/backendAddressPools/', 'LoadBalancerBackEnd')]"
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    "extensionProfile": {
+                        "extensions": [
+                            {
+                                "name": "InstallDockerEE",
+                                "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
+                                "properties": {
+                                    "publisher": "Microsoft.Azure.Extensions",
+                                    "type": "CustomScript",
+                                    "typeHandlerVersion": "2.0",
+                                    "autoUpgradeMinorVersion": true,
+                                    "settings": {
+                                        "fileUris": [
+                                            "[variables('scripts').installDockerEE]"
+                                        ]
+                                    },
+                                    "protectedSettings": {
+                                        "commandToExecute": "[concat('sh install-docker-ee.sh ', parameters('dockerEEURL'))]"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "name": "jumpbox-linux",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2016-04-30-preview",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', 'jumpbox-linux')]"
+            ],
+            "properties": {
+                "osProfile": {
+                    "computerName": "jumpbox",
+                    "adminUsername": "eeadmin",
+                    "adminPassword": "Docker123!"
+                },
+                "hardwareProfile": {
+                    "vmSize": "[variables('jumpbox-linux').vmSize]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[variables('jumpbox-linux').os.publisher]",
+                        "offer": "[variables('jumpbox-linux').os.offer]",
+                        "sku": "[variables('jumpbox-linux').os.sku]",
+                        "version": "[variables('jumpbox-linux').os.version]"
+                    },
+                    "osDisk": {
+                        "name": "jumpbox-linux",
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "Premium_LRS"
+                        }
+                    },
+                    "dataDisks": []
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', 'jumpbox-linux')]"
+                        }
+                    ]
+                }
+            },
+            "resources": [
+                {
+                    "name": "InstallDockerEE",
+                    "type": "extensions",
+                    "apiVersion": "2017-03-30",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[concat('Microsoft.Compute/virtualMachines/', 'jumpbox-linux')]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Azure.Extensions",
+                        "type": "CustomScript",
+                        "typeHandlerVersion": "2.0",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "fileUris": [
+                                "[variables('scripts').installDockerEE]"
+                            ]
+                        },
+                        "protectedSettings": {
+                            "commandToExecute": "[concat('sh install-docker-ee.sh ', parameters('dockerEEURL'))]"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "jumpbox-linux",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2016-09-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/virtualNetworks/', 'vnet')]",
+                "[concat('Microsoft.Network/publicIpAddresses/', 'jumpbox-linux')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('jumpbox-linux').subnet]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIpAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIpAddresses', 'jumpbox-linux')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "jumpbox-windows",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2016-04-30-preview",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', 'jumpbox-windows')]"
+            ],
+            "properties": {
+                "osProfile": {
+                    "computerName": "jumpbox",
+                    "adminUsername": "eeadmin",
+                    "adminPassword": "Docker123!"
+                },
+                "hardwareProfile": {
+                    "vmSize": "[variables('jumpbox-windows').vmSize]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[variables('jumpbox-windows').os.publisher]",
+                        "offer": "[variables('jumpbox-windows').os.offer]",
+                        "sku": "[variables('jumpbox-windows').os.sku]",
+                        "version": "[variables('jumpbox-windows').os.version]"
+                    },
+                    "osDisk": {
+                        "name": "jumpbox-windows",
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "Premium_LRS"
+                        }
+                    },
+                    "dataDisks": []
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', 'jumpbox-windows')]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "jumpbox-windows",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2016-09-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/virtualNetworks/', 'vnet')]",
+                "[concat('Microsoft.Network/publicIpAddresses/', 'jumpbox-windows')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('jumpbox-windows').subnet]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIpAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIpAddresses', 'jumpbox-windows')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {}
+}
