@@ -276,7 +276,7 @@
     "variables": {
         "_artifactsLocation": "https://raw.githubusercontent.com/stevenfollis/accoutrement/master",
         "d4a": {
-            "templateUrl": "https://gallery.azure.com/artifact/20161101/docker.dockerdatacenterdocker-standard.1.0.3/Artifacts/mainTemplate.json",
+            "templateUrl": "https://gallery.azure.com/artifact/20161101/docker.dockerdatacenter-previewdocker-standard.1.0.29/Artifacts/mainTemplate.json",
             "parameters": {
                 "ddcLicense": {
                     "value": "[parameters('ddcLicense')]"
