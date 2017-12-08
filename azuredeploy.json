@@ -251,6 +251,12 @@
             },
             "type": "string"
         },
+        "windowsPassword": {
+            "type": "string",
+            "metadata": {
+                "description": "Password used for the Windows virtual machines"
+            }
+        },
         "deployActiveDirectory": {
             "type": "bool",
             "defaultValue": true,
@@ -303,7 +309,7 @@
                     "value": "[parameters('managerVMSize')]"
                 },
                 "linuxSSHPublicKey": {
-                    "value": "[parameters('sshPublicKey')]"
+                    "value": "[parameters('linuxSSHPublicKey')]"
                 },
                 "swarmName": {
                     "value": "swarm"
@@ -315,13 +321,16 @@
                     "value": "[parameters('workerVMSize')]"
                 },
                 "windowsPassword": {
-                    "value": "[parameters('Docker123!')]"
+                    "value": "[parameters('windowsPassword')]"
                 },
                 "windowsWorkerCount": {
                     "value": "[parameters('windowsWorkerCount')]"
                 },
                 "windowsWorkerVMSize": {
                     "value": "[parameters('windowsWorkerVMSize')]"
+                },
+                "resourceLocation": {
+                    "value": "[resourceGroup().location]"
                 }
             }
         },
