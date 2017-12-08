@@ -7,12 +7,11 @@ A configurable Azure Resource Manager (ARM) Template for provisioning [Docker EE
 ## Accessories
 The template currently supports a variety of accessory templates. Click the title to see setup instructions specific to each template.
 
-| Scenario         | Description                                                                                  |
-|------------------|----------------------------------------------------------------------------------------------|
-| [Active Directory](./active-directory) | Provisions Docker EE for Azure with an AD Domain Controller pre-loaded with users and groups |
-| [Operations Management Suite](./oms) | Provisions Docker EE for Azure with OMS solution packs | 
-| [VMSS](./vmss) | Provisions a Docker EE cluster in Azure using Ubuntu images in a Virtual Machine Scale Set |
-| [Ubuntu](./ubuntu) | Provisions a Docker EE for Ubuntu cluster on Azure IaaS VMs (does not integrate with the other accessories) |
+| Scenario | Description |
+|---|---|
+| [Active Directory](./active-directory) | Adds an AD Domain Controller pre-loaded with users and groups |
+| [Operations Management Suite](./oms) | Adds OMS with a variety of solution packs | 
+| [VMSS](./vmss) | Separate template for provisioning infrastructure for a Docker EE cluster using Ubuntu images in a Virtual Machine Scale Set (Rather than D4A) |
 
 ## Prerequisites
 The following are needed prior to running the template:
