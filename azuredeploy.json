@@ -278,6 +278,12 @@
         "d4a": {
             "templateUrl": "https://gallery.azure.com/artifact/20161101/docker.dockerdatacenter-previewdocker-standard.1.0.29/Artifacts/mainTemplate.json",
             "parameters": {
+                "adServicePrincipalAppID": {
+                    "value": "[parameters('adServicePrincipalAppID')]"
+                },
+                "adServicePrincipalAppSecret": {
+                    "value": "[parameters('adServicePrincipalAppSecret')]"
+                },
                 "ddcLicense": {
                     "value": "[parameters('ddcLicense')]"
                 },
@@ -286,12 +292,6 @@
                 },
                 "ddcPassword": {
                     "value": "Docker123!"
-                },
-                "adServicePrincipalAppID": {
-                    "value": "[parameters('adServicePrincipalAppID')]"
-                },
-                "adServicePrincipalAppSecret": {
-                    "value": "[parameters('adServicePrincipalAppSecret')]"
                 },
                 "enableSystemPrune": {
                     "value": "no"
@@ -302,17 +302,26 @@
                 "managerVMSize": {
                     "value": "[parameters('managerVMSize')]"
                 },
-                "sshPublicKey": {
+                "linuxSSHPublicKey": {
                     "value": "[parameters('sshPublicKey')]"
                 },
                 "swarmName": {
                     "value": "swarm"
                 },
-                "workerCount": {
+                "linuxWorkerCount": {
                     "value": "[parameters('workerCount')]"
                 },
-                "workerVMSize": {
+                "linuxWorkerVMSize": {
                     "value": "[parameters('workerVMSize')]"
+                },
+                "windowsPassword": {
+                    "value": "[parameters('Docker123!')]"
+                },
+                "windowsWorkerCount": {
+                    "value": "[parameters('windowsWorkerCount')]"
+                },
+                "windowsWorkerVMSize": {
+                    "value": "[parameters('windowsWorkerVMSize')]"
                 }
             }
         },
@@ -328,17 +337,6 @@
                 },
                 "adServicePrincipalAppSecret": {
                     "value": "[parameters('adServicePrincipalAppSecret')]"
-                }
-            }
-        },
-        "windows": {
-            "templateUrl": "/windows/azuredeploy.json",
-            "parameters": {
-                "vmInstances": {
-                    "value": "[parameters('windowsWorkerCount')]"
-                },
-                "vmSize": {
-                    "value": "[parameters('windowsWorkerVMSize')]"
                 }
             }
         }
@@ -383,19 +381,6 @@
                     "uri": "[concat(variables('_artifactsLocation'), variables('oms').templateUrl)]"
                 },
                 "parameters": "[variables('oms').parameters]"
-            }
-        },
-        {
-            "name": "windows",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2017-05-10",
-            "condition": "[parameters('deployWindowsWorkers')]",
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[concat(variables('_artifactsLocation'), variables('windows').templateUrl)]"
-                },
-                "parameters": "[variables('windows').parameters]"
             }
         }
     ],
