@@ -2,25 +2,25 @@
     "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "ADServicePrincipalAppID": {
+        "adServicePrincipalAppID": {
             "metadata": {
                 "description": "AD ServicePrincipal App ID"
             },
             "type": "string"
         },
-        "ADServicePrincipalAppSecret": {
+        "adServicePrincipalAppSecret": {
             "metadata": {
                 "description": "AD ServicePrincipal App Secret"
             },
             "type": "securestring"
         },
-        "DDCLicense": {
+        "ddcLicense": {
             "metadata": {
                 "description": "Upload your Docker Enterprise Edition License Key"
             },
             "type": "securestring"
         },
-        "SSHPublicKey": {
+        "linuxSSHPublicKey": {
             "metadata": {
                 "description": "The SSH public key used to authenticate with the created swarm. Usually available in $HOME/.ssh/id_rsa.pub file"
             },
