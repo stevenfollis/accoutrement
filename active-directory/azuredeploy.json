@@ -20,7 +20,7 @@
             "imageSku": "2016-Datacenter",
             "domainName": "contoso.local"
         },
-        "scripts-base": "https://raw.githubusercontent.com/stevenfollis/chantier/master/active-directory/scripts/",
+        "scripts-base": "https://raw.githubusercontent.com/stevenfollis/accoutrement/master/active-directory/scripts/",
         "scripts": {
             "configureAD": "[concat(variables('scripts-base'), 'CreateADPDC.zip')]",
             "createTestUsers": "[concat(variables('scripts-base'), 'CreateTestUsers.ps1')]"
